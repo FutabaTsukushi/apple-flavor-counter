@@ -63,7 +63,7 @@ const displayDigits = ref<DigitState[]>([])
 
 let timeoutId: ReturnType<typeof setTimeout> | null = null
 let lastStableValue = props.modelValue
-const animationQueues: Map<number, Promise<void>> = new Map()
+const animationPromises: Map<number, Promise<void>> = new Map()
 
 onMounted(() => {
   const str = props.modelValue.toString().split('')
@@ -97,7 +97,7 @@ function getNextDigit(current: number, direction: 'up' | 'down'): number {
   }
 }
 
-async function animateStep(
+function createStepAnimation(
   index: number,
   fromDigit: string,
   toDigit: string,
@@ -133,6 +133,7 @@ async function animateStep(
 
       if (oldEl && newEl) {
         const yOffset = 100
+        const duration = props.stepDuration / 1000
 
         gsap.killTweensOf([oldEl, newEl])
 
@@ -143,7 +144,7 @@ async function animateStep(
             yPercent: isFromBottom ? -yOffset : yOffset,
             opacity: 0,
             filter: 'blur(10px)',
-            duration: props.stepDuration / 1000,
+            duration,
             ease: 'power2.out'
           }
         )
@@ -159,7 +160,7 @@ async function animateStep(
             yPercent: 0,
             opacity: 1,
             filter: 'blur(0px)',
-            duration: props.stepDuration / 1000,
+            duration,
             ease: 'power2.out',
             onComplete: resolve
           }
@@ -184,11 +185,32 @@ async function animateDigit(
   const { steps, direction } = getShortestPath(from, to)
   let current = from
 
+  const stepDuration = props.stepDuration
+  const overlap = stepDuration * 0.4
+
+  const promises: Promise<void>[] = []
+
   for (let i = 0; i < steps; i++) {
     const next = getNextDigit(current, direction)
-    await animateStep(index, current.toString(), next.toString(), direction)
+    const delay = i * (stepDuration - overlap)
+
+    const promise = new Promise<void>(resolve => {
+      setTimeout(async () => {
+        await createStepAnimation(
+          index,
+          current.toString(),
+          next.toString(),
+          direction
+        )
+        resolve()
+      }, delay)
+    })
+
+    promises.push(promise)
     current = next
   }
+
+  await Promise.all(promises)
 }
 
 const updateCounter = async (newValue: number) => {
@@ -222,7 +244,7 @@ const updateCounter = async (newValue: number) => {
 
     if (oldDigit !== newDigit) {
       const animPromise = animateDigit(i, oldDigit, newDigit)
-      animationQueues.set(i, animPromise)
+      animationPromises.set(i, animPromise)
       animations.push(animPromise)
     }
   }
