@@ -194,12 +194,12 @@ async function animateDigit(
 const updateCounter = async (newValue: number) => {
   const oldValue = lastStableValue
 
-  let newStr = newValue.toString()
-  let oldStr = oldValue.toString()
-  const maxLength = Math.max(newStr.length, oldStr.length)
+  const newStrRaw = newValue.toString()
+  const oldStrRaw = oldValue.toString()
+  const maxLength = Math.max(newStrRaw.length, oldStrRaw.length)
 
-  newStr = newStr.padStart(maxLength, '0')
-  oldStr = oldStr.padStart(maxLength, '0')
+  const newStr = newStrRaw.padStart(maxLength, '0')
+  const oldStr = oldStrRaw.padStart(maxLength, '0')
 
   const newArr = newStr.split('')
   const oldArr = oldStr.split('')
@@ -228,6 +228,12 @@ const updateCounter = async (newValue: number) => {
   }
 
   await Promise.all(animations)
+
+  displayDigits.value = newStrRaw.split('').map(digit => ({
+    current: digit,
+    old: null,
+    direction: null
+  }))
 }
 
 watch(

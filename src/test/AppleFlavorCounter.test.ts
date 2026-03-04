@@ -6,7 +6,11 @@ import AppleFlavorCounter from '../AppleFlavorCounter.vue'
 vi.mock('gsap', () => ({
   default: {
     killTweensOf: vi.fn(),
-    fromTo: vi.fn()
+    fromTo: vi.fn((_el, _from, to) => {
+      if (to.onComplete) {
+        setTimeout(to.onComplete, 0)
+      }
+    })
   }
 }))
 
@@ -194,6 +198,8 @@ describe('AppleFlavorCounter', () => {
   })
 
   it('handles digit count decrease', async () => {
+    vi.useRealTimers()
+
     const wrapper = mount(AppleFlavorCounter, {
       props: { modelValue: 100, debounce: 0 }
     })
@@ -203,9 +209,14 @@ describe('AppleFlavorCounter', () => {
 
     await wrapper.setProps({ modelValue: 99 })
     await nextTick()
-    await nextTick()
+    await vi.waitFor(
+      () => {
+        expect(wrapper.findAll('.digit-slot').length).toBe(2)
+      },
+      { timeout: 500 }
+    )
 
-    expect(wrapper.findAll('.digit-slot').length).toBe(3)
+    vi.useFakeTimers()
   })
 
   it('does not animate when value unchanged', async () => {
