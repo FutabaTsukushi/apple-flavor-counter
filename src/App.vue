@@ -6,6 +6,7 @@ const count = ref(2023)
 const debounceVal = ref(300)
 const stepDurationVal = ref(80)
 const sizeVal = ref(60)
+const increasingDirectionVal = ref<'up' | 'down'>('up')
 
 const add = () => (count.value += 10)
 const sub = () => (count.value -= 10)
@@ -36,6 +37,14 @@ const sub = () => (count.value -= 10)
         <input type="number" v-model.number="sizeVal" />
       </label>
 
+      <label>
+        数字增加方向 (Increasing Direction):
+        <select v-model="increasingDirectionVal">
+          <option value="up">向上滚动 (Up)</option>
+          <option value="down">向下滚动 (Down)</option>
+        </select>
+      </label>
+
       <div class="buttons">
         <button @click="sub">-10</button>
         <button @click="add">+10</button>
@@ -49,6 +58,7 @@ const sub = () => (count.value -= 10)
         :debounce="debounceVal"
         :step-duration="stepDurationVal"
         :size="sizeVal"
+        :increasing-direction="increasingDirectionVal"
         color="#333"
       />
     </div>

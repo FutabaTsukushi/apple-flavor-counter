@@ -221,4 +221,31 @@ describe('AppleFlavorCounter', () => {
 
     expect(gsap.fromTo).not.toHaveBeenCalled()
   })
+
+  it('uses default increasingDirection as up', async () => {
+    const wrapper = mount(AppleFlavorCounter, {
+      props: { modelValue: 5, debounce: 0 }
+    })
+    await nextTick()
+
+    expect(wrapper.props('increasingDirection')).toBe('up')
+  })
+
+  it('accepts increasingDirection down', async () => {
+    const wrapper = mount(AppleFlavorCounter, {
+      props: { modelValue: 5, debounce: 0, increasingDirection: 'down' }
+    })
+    await nextTick()
+
+    expect(wrapper.props('increasingDirection')).toBe('down')
+  })
+
+  it('accepts custom stepDuration', async () => {
+    const wrapper = mount(AppleFlavorCounter, {
+      props: { modelValue: 5, stepDuration: 100 }
+    })
+    await nextTick()
+
+    expect(wrapper.props('stepDuration')).toBe(100)
+  })
 })

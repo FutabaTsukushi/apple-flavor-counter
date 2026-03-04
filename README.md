@@ -52,13 +52,14 @@ const count = ref(0)
 
 ## Props
 
-| Prop           | Type     | Default     | Description                                           |
-| -------------- | -------- | ----------- | ----------------------------------------------------- |
-| `modelValue`   | `number` | Required    | The counter value to display                          |
-| `debounce`     | `number` | `300`       | Debounce time in milliseconds for value updates       |
-| `size`         | `number` | `48`        | Font size in pixels                                   |
-| `color`        | `string` | `'inherit'` | Text color                                            |
-| `stepDuration` | `number` | `80`        | Duration of each digit step animation in milliseconds |
+| Prop                  | Type             | Default     | Description                                           |
+| --------------------- | ---------------- | ----------- | ----------------------------------------------------- |
+| `modelValue`          | `number`         | Required    | The counter value to display                          |
+| `debounce`            | `number`         | `300`       | Debounce time in milliseconds for value updates       |
+| `size`                | `number`         | `48`        | Font size in pixels                                   |
+| `color`               | `string`         | `'inherit'` | Text color                                            |
+| `stepDuration`        | `number`         | `80`        | Duration of each digit step animation in milliseconds |
+| `increasingDirection` | `'up' \| 'down'` | `'up'`      | Scroll direction when digit increases                 |
 
 ## Animation Behavior
 
@@ -69,6 +70,9 @@ The component simulates a combination lock (rotary dial) effect:
   - Example: 8 → 2 goes up (8→9→0→1→2, 4 steps) instead of down (6 steps)
 - **Step-by-Step Rolling**: Each digit animates through intermediate values
 - **Blur Effect**: Smooth blur transition for a polished look
+- **Configurable Direction**:
+  - `increasingDirection="up"` (default): digits scroll up when increasing
+  - `increasingDirection="down"`: digits scroll down when increasing
 
 ## Development
 
