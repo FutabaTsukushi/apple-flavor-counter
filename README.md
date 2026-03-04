@@ -4,12 +4,12 @@ A Vue 3 counter component with smooth animations, inspired by Apple's design aes
 
 ## Features
 
-- Smooth digit transition animations using GSAP
-- Automatic directional animation (up/down based on value change)
+- Combination lock-style digit rolling animation
+- Calculates shortest path (direct or wrap-around) for each digit
+- Smooth step-by-step transitions using GSAP
 - Configurable debounce for rapid updates
-- Customizable size and color
+- Customizable size, color, and animation speed
 - TypeScript support
-- Zero dependencies (except Vue 3 and GSAP)
 
 ## Installation
 
@@ -52,18 +52,23 @@ const count = ref(0)
 
 ## Props
 
-| Prop         | Type     | Default     | Description                                     |
-| ------------ | -------- | ----------- | ----------------------------------------------- |
-| `modelValue` | `number` | Required    | The counter value to display                    |
-| `debounce`   | `number` | `300`       | Debounce time in milliseconds for value updates |
-| `size`       | `number` | `48`        | Font size in pixels                             |
-| `color`      | `string` | `'inherit'` | Text color                                      |
+| Prop           | Type     | Default     | Description                                           |
+| -------------- | -------- | ----------- | ----------------------------------------------------- |
+| `modelValue`   | `number` | Required    | The counter value to display                          |
+| `debounce`     | `number` | `300`       | Debounce time in milliseconds for value updates       |
+| `size`         | `number` | `48`        | Font size in pixels                                   |
+| `color`        | `string` | `'inherit'` | Text color                                            |
+| `stepDuration` | `number` | `80`        | Duration of each digit step animation in milliseconds |
 
 ## Animation Behavior
 
-- When a digit **increases**: The new digit slides in from the **top** while the old digit exits downward
-- When a digit **decreases**: The new digit slides in from the **bottom** while the old digit exits upward
-- Both animations include a smooth blur effect for a polished look
+The component simulates a combination lock (rotary dial) effect:
+
+- **Shortest Path Calculation**: For each digit, calculates whether to go directly or wrap around through 0
+  - Example: 2 → 8 goes down (2→1→0→9→8, 4 steps) instead of up (6 steps)
+  - Example: 8 → 2 goes up (8→9→0→1→2, 4 steps) instead of down (6 steps)
+- **Step-by-Step Rolling**: Each digit animates through intermediate values
+- **Blur Effect**: Smooth blur transition for a polished look
 
 ## Development
 
