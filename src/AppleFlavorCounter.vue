@@ -44,6 +44,11 @@ const props = defineProps({
   stepDuration: {
     type: Number,
     default: 80
+  },
+  increasingDirection: {
+    type: String as () => 'up' | 'down',
+    default: 'up',
+    validator: (v: string) => ['up', 'down'].includes(v)
   }
 })
 
@@ -99,10 +104,15 @@ async function animateStep(
   direction: 'up' | 'down'
 ): Promise<void> {
   return new Promise(resolve => {
+    const isFromBottom =
+      props.increasingDirection === 'up'
+        ? direction === 'up'
+        : direction === 'down'
+
     displayDigits.value[index] = {
       current: toDigit,
       old: fromDigit,
-      direction: direction === 'up' ? 'from-bottom' : 'from-top'
+      direction: isFromBottom ? 'from-bottom' : 'from-top'
     }
 
     nextTick(() => {
@@ -122,7 +132,6 @@ async function animateStep(
       const newEl = slot.querySelector('.new')
 
       if (oldEl && newEl) {
-        const isFromBottom = direction === 'up'
         const yOffset = 100
 
         gsap.killTweensOf([oldEl, newEl])
