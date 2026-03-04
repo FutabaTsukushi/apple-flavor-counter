@@ -40,6 +40,10 @@ const props = defineProps({
   color: {
     type: String,
     default: 'inherit'
+  },
+  stepDuration: {
+    type: Number,
+    default: 80
   }
 })
 
@@ -54,6 +58,7 @@ const displayDigits = ref<DigitState[]>([])
 
 let timeoutId: ReturnType<typeof setTimeout> | null = null
 let lastStableValue = props.modelValue
+const animationQueues: Map<number, Promise<void>> = new Map()
 
 onMounted(() => {
   const str = props.modelValue.toString().split('')
@@ -64,70 +69,72 @@ onMounted(() => {
   }))
 })
 
-const updateCounter = (newValue: number) => {
-  const oldValue = lastStableValue
+function getShortestPath(
+  from: number,
+  to: number
+): { steps: number; direction: 'up' | 'down' } {
+  const directDiff = to - from
+  const clockwiseSteps = ((directDiff % 10) + 10) % 10
+  const counterClockwiseSteps = 10 - clockwiseSteps
 
-  let newStr = newValue.toString()
-  let oldStr = oldValue.toString()
-  const maxLength = Math.max(newStr.length, oldStr.length)
+  if (clockwiseSteps <= counterClockwiseSteps) {
+    return { steps: clockwiseSteps, direction: 'up' }
+  } else {
+    return { steps: counterClockwiseSteps, direction: 'down' }
+  }
+}
 
-  newStr = newStr.padStart(maxLength, '0')
-  oldStr = oldStr.padStart(maxLength, '0')
+function getNextDigit(current: number, direction: 'up' | 'down'): number {
+  if (direction === 'up') {
+    return (current + 1) % 10
+  } else {
+    return (current - 1 + 10) % 10
+  }
+}
 
-  const newArr = newStr.split('')
-  const oldArr = oldStr.split('')
-
-  const nextState: DigitState[] = newArr.map((digit, index) => {
-    const oldDigit = oldArr[index]
-
-    if (digit === oldDigit) {
-      return { current: digit, old: null, direction: null }
+async function animateStep(
+  index: number,
+  fromDigit: string,
+  toDigit: string,
+  direction: 'up' | 'down'
+): Promise<void> {
+  return new Promise(resolve => {
+    displayDigits.value[index] = {
+      current: toDigit,
+      old: fromDigit,
+      direction: direction === 'up' ? 'from-bottom' : 'from-top'
     }
 
-    const n = parseInt(digit)
-    const o = parseInt(oldDigit)
-    const direction = n < o ? 'from-bottom' : 'from-top'
+    nextTick(() => {
+      if (!counterRef.value) {
+        resolve()
+        return
+      }
 
-    return {
-      current: digit,
-      old: oldDigit,
-      direction: direction
-    }
-  })
-
-  displayDigits.value = nextState
-  lastStableValue = newValue
-
-  nextTick(() => {
-    if (!counterRef.value) return
-
-    const slots = counterRef.value.querySelectorAll('.digit-slot')
-
-    slots.forEach((slot, index) => {
-      const state = displayDigits.value[index]
-      if (!state || !state.old) return
+      const slots = counterRef.value.querySelectorAll('.digit-slot')
+      const slot = slots[index]
+      if (!slot) {
+        resolve()
+        return
+      }
 
       const oldEl = slot.querySelector('.old')
       const newEl = slot.querySelector('.new')
 
       if (oldEl && newEl) {
-        const isFromBottom = state.direction === 'from-bottom'
+        const isFromBottom = direction === 'up'
         const yOffset = 100
 
         gsap.killTweensOf([oldEl, newEl])
 
         gsap.fromTo(
           oldEl,
-          {
-            yPercent: 0,
-            opacity: 1,
-            filter: 'blur(0px)'
-          },
+          { yPercent: 0, opacity: 1, filter: 'blur(0px)' },
           {
             yPercent: isFromBottom ? -yOffset : yOffset,
             opacity: 0,
             filter: 'blur(10px)',
-            duration: 0.5,
+            duration: props.stepDuration / 1000,
             ease: 'power2.out'
           }
         )
@@ -143,13 +150,75 @@ const updateCounter = (newValue: number) => {
             yPercent: 0,
             opacity: 1,
             filter: 'blur(0px)',
-            duration: 0.5,
-            ease: 'power2.out'
+            duration: props.stepDuration / 1000,
+            ease: 'power2.out',
+            onComplete: resolve
           }
         )
+      } else {
+        resolve()
       }
     })
   })
+}
+
+async function animateDigit(
+  index: number,
+  fromChar: string,
+  toChar: string
+): Promise<void> {
+  const from = parseInt(fromChar)
+  const to = parseInt(toChar)
+
+  if (from === to) return
+
+  const { steps, direction } = getShortestPath(from, to)
+  let current = from
+
+  for (let i = 0; i < steps; i++) {
+    const next = getNextDigit(current, direction)
+    await animateStep(index, current.toString(), next.toString(), direction)
+    current = next
+  }
+}
+
+const updateCounter = async (newValue: number) => {
+  const oldValue = lastStableValue
+
+  let newStr = newValue.toString()
+  let oldStr = oldValue.toString()
+  const maxLength = Math.max(newStr.length, oldStr.length)
+
+  newStr = newStr.padStart(maxLength, '0')
+  oldStr = oldStr.padStart(maxLength, '0')
+
+  const newArr = newStr.split('')
+  const oldArr = oldStr.split('')
+
+  displayDigits.value = newArr.map(digit => ({
+    current: digit,
+    old: null,
+    direction: null
+  }))
+
+  lastStableValue = newValue
+
+  await nextTick()
+
+  const animations: Promise<void>[] = []
+
+  for (let i = 0; i < maxLength; i++) {
+    const oldDigit = oldArr[i]
+    const newDigit = newArr[i]
+
+    if (oldDigit !== newDigit) {
+      const animPromise = animateDigit(i, oldDigit, newDigit)
+      animationQueues.set(i, animPromise)
+      animations.push(animPromise)
+    }
+  }
+
+  await Promise.all(animations)
 }
 
 watch(

@@ -1,27 +1,39 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import AppleFlavorCounter from './AppleFlavorCounter.vue';
+import { ref } from 'vue'
+import AppleFlavorCounter from './AppleFlavorCounter.vue'
 
-const count = ref(2023);
-const debounceVal = ref(300);
+const count = ref(2023)
+const debounceVal = ref(300)
+const stepDurationVal = ref(80)
+const sizeVal = ref(60)
 
-const add = () => count.value += 10;
-const sub = () => count.value -= 10;
+const add = () => (count.value += 10)
+const sub = () => (count.value -= 10)
 </script>
 
 <template>
   <div class="container">
     <h1>Apple Flavor Counter Demo</h1>
-    
+
     <div class="controls">
       <label>
-        数值 (Value): 
+        数值 (Value):
         <input type="number" v-model.number="count" />
       </label>
-      
+
       <label>
-        防抖 (Debounce ms): 
+        防抖 (Debounce ms):
         <input type="number" v-model.number="debounceVal" />
+      </label>
+
+      <label>
+        每步时长 (Step Duration ms):
+        <input type="number" v-model.number="stepDurationVal" />
+      </label>
+
+      <label>
+        字体大小 (Size px):
+        <input type="number" v-model.number="sizeVal" />
       </label>
 
       <div class="buttons">
@@ -32,18 +44,19 @@ const sub = () => count.value -= 10;
 
     <div class="preview-area">
       <p>Preview:</p>
-      <!-- 使用我们刚写的组件 -->
-      <AppleFlavorCounter 
-        :model-value="count" 
+      <AppleFlavorCounter
+        :model-value="count"
         :debounce="debounceVal"
-        :size="60"
+        :step-duration="stepDurationVal"
+        :size="sizeVal"
         color="#333"
       />
     </div>
 
     <p class="desc">
-      Try changing the number. If New < Old, it enters from bottom. If New > Old, from top.<br>
-      Leading zeros are automatically padded to match the length of the longer number.
+      Combination lock-style animation: calculates shortest path for each
+      digit.<br />
+      Example: 2→8 goes 2→1→0→9→8 (4 steps down) instead of 6 steps up.
     </p>
   </div>
 </template>
@@ -63,7 +76,7 @@ body {
   background: white;
   padding: 2rem;
   border-radius: 1rem;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   text-align: center;
   width: 400px;
 }
