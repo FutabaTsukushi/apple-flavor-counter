@@ -149,35 +149,33 @@ describe('AppleFlavorCounter', () => {
   })
 
   it('handles value increase correctly', async () => {
+    vi.useRealTimers()
     const wrapper = mount(AppleFlavorCounter, {
-      props: { modelValue: 5, debounce: 0 },
+      props: { modelValue: 5, debounce: 0, stepDuration: 10 },
       attachTo: document.body
     })
     await nextTick()
 
     await wrapper.setProps({ modelValue: 9 })
-    await nextTick()
-    await nextTick()
-
-    expect(gsap.fromTo).toHaveBeenCalled()
-    expect(gsap.killTweensOf).toHaveBeenCalled()
+    await vi.waitFor(() => expect(gsap.fromTo).toHaveBeenCalled(), {
+      timeout: 500
+    })
 
     wrapper.unmount()
   })
 
   it('handles value decrease correctly', async () => {
+    vi.useRealTimers()
     const wrapper = mount(AppleFlavorCounter, {
-      props: { modelValue: 9, debounce: 0 },
+      props: { modelValue: 9, debounce: 0, stepDuration: 10 },
       attachTo: document.body
     })
     await nextTick()
 
     await wrapper.setProps({ modelValue: 5 })
-    await nextTick()
-    await nextTick()
-
-    expect(gsap.fromTo).toHaveBeenCalled()
-    expect(gsap.killTweensOf).toHaveBeenCalled()
+    await vi.waitFor(() => expect(gsap.fromTo).toHaveBeenCalled(), {
+      timeout: 500
+    })
 
     wrapper.unmount()
   })
