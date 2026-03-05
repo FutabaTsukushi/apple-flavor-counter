@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { nextTick } from 'vue'
-import AppleFlavorCounter from '../AppleFlavorCounter.vue'
+import MotionCounter from '../MotionCounter.vue'
 
 vi.mock('gsap', () => ({
   default: {
@@ -16,7 +16,7 @@ vi.mock('gsap', () => ({
 
 import gsap from 'gsap'
 
-describe('AppleFlavorCounter', () => {
+describe('MotionCounter', () => {
   beforeEach(() => {
     vi.useFakeTimers()
     vi.clearAllMocks()
@@ -27,7 +27,7 @@ describe('AppleFlavorCounter', () => {
   })
 
   it('renders initial value correctly', async () => {
-    const wrapper = mount(AppleFlavorCounter, {
+    const wrapper = mount(MotionCounter, {
       props: { modelValue: 123 }
     })
     await nextTick()
@@ -40,7 +40,7 @@ describe('AppleFlavorCounter', () => {
   })
 
   it('renders single digit correctly', async () => {
-    const wrapper = mount(AppleFlavorCounter, {
+    const wrapper = mount(MotionCounter, {
       props: { modelValue: 5 }
     })
     await nextTick()
@@ -51,7 +51,7 @@ describe('AppleFlavorCounter', () => {
   })
 
   it('renders zero correctly', async () => {
-    const wrapper = mount(AppleFlavorCounter, {
+    const wrapper = mount(MotionCounter, {
       props: { modelValue: 0 }
     })
     await nextTick()
@@ -62,40 +62,40 @@ describe('AppleFlavorCounter', () => {
   })
 
   it('applies custom size prop', async () => {
-    const wrapper = mount(AppleFlavorCounter, {
+    const wrapper = mount(MotionCounter, {
       props: { modelValue: 42, size: 72 }
     })
     await nextTick()
 
-    const container = wrapper.find('.apple-counter')
+    const container = wrapper.find('.motion-counter')
     expect(container.attributes('style')).toContain('font-size: 72px')
   })
 
   it('applies custom color prop', async () => {
-    const wrapper = mount(AppleFlavorCounter, {
+    const wrapper = mount(MotionCounter, {
       props: { modelValue: 42, color: '#ff0000' }
     })
     await nextTick()
 
-    const container = wrapper.find('.apple-counter')
+    const container = wrapper.find('.motion-counter')
     expect(container.attributes('style')).toMatch(
       /color:\s*(rgb\(255,\s*0,\s*0\)|#ff0000)/i
     )
   })
 
   it('applies default size and color', async () => {
-    const wrapper = mount(AppleFlavorCounter, {
+    const wrapper = mount(MotionCounter, {
       props: { modelValue: 42 }
     })
     await nextTick()
 
-    const container = wrapper.find('.apple-counter')
+    const container = wrapper.find('.motion-counter')
     expect(container.attributes('style')).toContain('font-size: 48px')
     expect(container.attributes('style')).toContain('color: inherit')
   })
 
   it('debounces value updates by default (300ms)', async () => {
-    const wrapper = mount(AppleFlavorCounter, {
+    const wrapper = mount(MotionCounter, {
       props: { modelValue: 100 }
     })
     await nextTick()
@@ -116,7 +116,7 @@ describe('AppleFlavorCounter', () => {
   })
 
   it('respects custom debounce time', async () => {
-    const wrapper = mount(AppleFlavorCounter, {
+    const wrapper = mount(MotionCounter, {
       props: { modelValue: 100, debounce: 500 }
     })
     await nextTick()
@@ -134,7 +134,7 @@ describe('AppleFlavorCounter', () => {
   })
 
   it('updates immediately when debounce is 0', async () => {
-    const wrapper = mount(AppleFlavorCounter, {
+    const wrapper = mount(MotionCounter, {
       props: { modelValue: 100, debounce: 0 }
     })
     await nextTick()
@@ -150,7 +150,7 @@ describe('AppleFlavorCounter', () => {
 
   it('handles value increase correctly', async () => {
     vi.useRealTimers()
-    const wrapper = mount(AppleFlavorCounter, {
+    const wrapper = mount(MotionCounter, {
       props: { modelValue: 5, debounce: 0, stepDuration: 10 },
       attachTo: document.body
     })
@@ -166,7 +166,7 @@ describe('AppleFlavorCounter', () => {
 
   it('handles value decrease correctly', async () => {
     vi.useRealTimers()
-    const wrapper = mount(AppleFlavorCounter, {
+    const wrapper = mount(MotionCounter, {
       props: { modelValue: 9, debounce: 0, stepDuration: 10 },
       attachTo: document.body
     })
@@ -181,7 +181,7 @@ describe('AppleFlavorCounter', () => {
   })
 
   it('handles digit count increase', async () => {
-    const wrapper = mount(AppleFlavorCounter, {
+    const wrapper = mount(MotionCounter, {
       props: { modelValue: 99, debounce: 0 }
     })
     await nextTick()
@@ -198,7 +198,7 @@ describe('AppleFlavorCounter', () => {
   it('handles digit count decrease', async () => {
     vi.useRealTimers()
 
-    const wrapper = mount(AppleFlavorCounter, {
+    const wrapper = mount(MotionCounter, {
       props: { modelValue: 100, debounce: 0 }
     })
     await nextTick()
@@ -218,7 +218,7 @@ describe('AppleFlavorCounter', () => {
   })
 
   it('does not animate when value unchanged', async () => {
-    const wrapper = mount(AppleFlavorCounter, {
+    const wrapper = mount(MotionCounter, {
       props: { modelValue: 42, debounce: 0 }
     })
     await nextTick()
@@ -232,7 +232,7 @@ describe('AppleFlavorCounter', () => {
   })
 
   it('uses default increasingDirection as up', async () => {
-    const wrapper = mount(AppleFlavorCounter, {
+    const wrapper = mount(MotionCounter, {
       props: { modelValue: 5, debounce: 0 }
     })
     await nextTick()
@@ -241,7 +241,7 @@ describe('AppleFlavorCounter', () => {
   })
 
   it('accepts increasingDirection down', async () => {
-    const wrapper = mount(AppleFlavorCounter, {
+    const wrapper = mount(MotionCounter, {
       props: { modelValue: 5, debounce: 0, increasingDirection: 'down' }
     })
     await nextTick()
@@ -250,7 +250,7 @@ describe('AppleFlavorCounter', () => {
   })
 
   it('accepts custom stepDuration', async () => {
-    const wrapper = mount(AppleFlavorCounter, {
+    const wrapper = mount(MotionCounter, {
       props: { modelValue: 5, stepDuration: 100 }
     })
     await nextTick()

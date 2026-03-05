@@ -1,14 +1,14 @@
 {
-  "name": "apple-flavor-counter",
+  "name": "motion-counter",
   "version": "0.0.1",
-  "description": "A Vue 3 counter component with apple flavor",
-  "main": "./dist/apple-flavor-counter.umd.js",
-  "module": "./dist/apple-flavor-counter.mjs",
+  "description": "A Vue 3 counter component with smooth motion animations",
+  "main": "./dist/motion-counter.umd.js",
+  "module": "./dist/motion-counter.mjs",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/apple-flavor-counter.mjs",
-      "require": "./dist/apple-flavor-counter.umd.js",
+      "import": "./dist/motion-counter.mjs",
+      "require": "./dist/motion-counter.umd.js",
       "types": "./dist/index.d.ts"
     },
     "./style.css": "./dist/style.css"

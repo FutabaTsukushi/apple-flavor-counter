@@ -1,3 +1,3 @@
-import AppleFlavorCounter from './AppleFlavorCounter.vue'
+import MotionCounter from './MotionCounter.vue'
 
-export { AppleFlavorCounter }
+export { MotionCounter }
