@@ -1,7 +1,7 @@
 <template>
   <div
     ref="counterRef"
-    class="apple-counter"
+    class="motion-counter"
     :style="{ fontSize: size + 'px', color: color }"
   >
     <div
@@ -276,7 +276,7 @@ watch(
 </script>
 
 <style scoped>
-.apple-counter {
+.motion-counter {
   display: inline-flex;
   font-feature-settings: 'tnum'; /* 等宽数字，防止抖动 */
   font-variant-numeric: tabular-nums;

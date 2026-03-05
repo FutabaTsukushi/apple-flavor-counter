@@ -14,8 +14,8 @@ export default defineConfig({
   build: {
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
-      name: 'AppleFlavorCounter',
-      fileName: 'apple-flavor-counter'
+      name: 'MotionCounter',
+      fileName: 'motion-counter'
     },
     rollupOptions: {
       external: ['vue'],

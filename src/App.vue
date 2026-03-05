@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import AppleFlavorCounter from './AppleFlavorCounter.vue'
+import MotionCounter from './MotionCounter.vue'
 
 const count = ref(2023)
 const debounceVal = ref(300)
@@ -14,7 +14,7 @@ const sub = () => (count.value -= 10)
 
 <template>
   <div class="container">
-    <h1>Apple Flavor Counter Demo</h1>
+    <h1>Motion Counter Demo</h1>
 
     <div class="controls">
       <label>
@@ -53,7 +53,7 @@ const sub = () => (count.value -= 10)
 
     <div class="preview-area">
       <p>Preview:</p>
-      <AppleFlavorCounter
+      <MotionCounter
         :model-value="count"
         :debounce="debounceVal"
         :step-duration="stepDurationVal"

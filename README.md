@@ -1,6 +1,6 @@
-# Apple Flavor Counter
+# Motion Counter
 
-A Vue 3 counter component with smooth animations, inspired by Apple's design aesthetic.
+A Vue 3 counter component with smooth animations, inspired by motion design aesthetics.
 
 ## Features
 
@@ -14,11 +14,11 @@ A Vue 3 counter component with smooth animations, inspired by Apple's design aes
 ## Installation
 
 ```bash
-npm install apple-flavor-counter
+npm install motion-counter
 # or
-pnpm add apple-flavor-counter
+pnpm add motion-counter
 # or
-yarn add apple-flavor-counter
+yarn add motion-counter
 ```
 
 ## Usage
@@ -27,11 +27,11 @@ yarn add apple-flavor-counter
 
 ```ts
 import { createApp } from 'vue'
-import { AppleFlavorCounter } from 'apple-flavor-counter'
-import 'apple-flavor-counter/style.css'
+import { MotionCounter } from 'motion-counter'
+import 'motion-counter/style.css'
 
 const app = createApp(App)
-app.component('AppleFlavorCounter', AppleFlavorCounter)
+app.component('MotionCounter', MotionCounter)
 ```
 
 ### Local Registration
@@ -39,14 +39,14 @@ app.component('AppleFlavorCounter', AppleFlavorCounter)
 ```vue
 <script setup>
 import { ref } from 'vue'
-import { AppleFlavorCounter } from 'apple-flavor-counter'
-import 'apple-flavor-counter/style.css'
+import { MotionCounter } from 'motion-counter'
+import 'motion-counter/style.css'
 
 const count = ref(0)
 </script>
 
 <template>
-  <AppleFlavorCounter v-model="count" />
+  <MotionCounter v-model="count" />
 </template>
 ```
 
