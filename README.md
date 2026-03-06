@@ -26,23 +26,23 @@ yarn add motion-counter
 ### Global Registration
 
 ```ts
-import { createApp } from 'vue'
-import { MotionCounter } from 'motion-counter'
-import 'motion-counter/style.css'
+import { createApp } from 'vue';
+import { MotionCounter } from 'motion-counter';
+import 'motion-counter/style.css';
 
-const app = createApp(App)
-app.component('MotionCounter', MotionCounter)
+const app = createApp(App);
+app.component('MotionCounter', MotionCounter);
 ```
 
 ### Local Registration
 
 ```vue
 <script setup>
-import { ref } from 'vue'
-import { MotionCounter } from 'motion-counter'
-import 'motion-counter/style.css'
+import { ref } from 'vue';
+import { MotionCounter } from 'motion-counter';
+import 'motion-counter/style.css';
 
-const count = ref(0)
+const count = ref(0);
 </script>
 
 <template>

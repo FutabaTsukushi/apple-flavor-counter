@@ -20,4 +20,4 @@ module.exports = {
     // Override rules here if needed
     'vue/multi-word-component-names': 'off'
   }
-}
+};

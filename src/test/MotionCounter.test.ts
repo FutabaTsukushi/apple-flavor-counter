@@ -237,10 +237,10 @@ describe('MotionCounter', () => {
     expect(wrapper.findAll('.digit-slot').length).toBe(3);
 
     await wrapper.setProps({ modelValue: 99 });
-    
+
     // Wait for animation to complete
     await new Promise(resolve => setTimeout(resolve, 100));
-    
+
     await vi.waitFor(
       () => {
         const slots = wrapper.findAll('.digit-slot');
