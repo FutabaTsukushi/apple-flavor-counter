@@ -1,3 +1,3 @@
-import MotionCounter from './MotionCounter.vue'
+import MotionCounter from './MotionCounter.vue';
 
-export { MotionCounter }
+export { MotionCounter };

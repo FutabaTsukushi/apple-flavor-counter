@@ -4,25 +4,26 @@
     class="motion-counter"
     :style="{ fontSize: size + 'px', color: color }"
   >
-    <div
-      v-for="(digitState, index) in displayDigits"
-      :key="index"
-      class="digit-slot"
-    >
-      <span v-if="digitState.old !== null" class="digit old">
-        {{ digitState.old }}
-      </span>
-
-      <span class="digit new">
-        {{ digitState.current }}
-      </span>
+    <div v-for="(_, index) in digitColumns" :key="index" class="digit-slot">
+      <div :ref="el => setStripRef(el, index)" class="digit-strip">
+        <span v-for="digit in 10" :key="digit - 1" class="digit">
+          {{ digit - 1 }}
+        </span>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick, onMounted, useTemplateRef } from 'vue'
-import gsap from 'gsap'
+import {
+  ref,
+  watch,
+  nextTick,
+  onMounted,
+  useTemplateRef,
+  type ComponentPublicInstance
+} from 'vue';
+import gsap from 'gsap';
 
 const props = defineProps({
   modelValue: {
@@ -50,235 +51,203 @@ const props = defineProps({
     default: 'up',
     validator: (v: string) => ['up', 'down'].includes(v)
   }
-})
+});
 
-interface DigitState {
-  current: string
-  old: string | null
-  direction: 'from-bottom' | 'from-top' | null
+interface DigitColumn {
+  currentValue: number;
+  animation: gsap.core.Tween | null;
 }
 
-const counterRef = useTemplateRef<HTMLDivElement>('counterRef')
-const displayDigits = ref<DigitState[]>([])
+const counterRef = useTemplateRef<HTMLDivElement>('counterRef');
+const digitColumns = ref<DigitColumn[]>([]);
+const stripRefs = ref<Map<number, HTMLDivElement>>(new Map());
 
-let timeoutId: ReturnType<typeof setTimeout> | null = null
-let lastStableValue = props.modelValue
-const animationPromises: Map<number, Promise<void>> = new Map()
+let timeoutId: ReturnType<typeof setTimeout> | null = null;
+let lastStableValue = props.modelValue;
+
+function setStripRef(
+  el: Element | ComponentPublicInstance | null,
+  index: number
+) {
+  if (el && el instanceof Element) {
+    stripRefs.value.set(index, el as HTMLDivElement);
+  }
+}
 
 onMounted(() => {
-  const str = props.modelValue.toString().split('')
-  displayDigits.value = str.map(d => ({
-    current: d,
-    old: null,
-    direction: null
-  }))
-})
+  const str = props.modelValue.toString().split('');
+  digitColumns.value = str.map(d => ({
+    currentValue: parseInt(d),
+    animation: null
+  }));
 
-function getShortestPath(
+  nextTick(() => {
+    digitColumns.value.forEach((col, index) => {
+      const strip = stripRefs.value.get(index);
+      if (strip) {
+        gsap.set(strip, { y: `${-col.currentValue}em` });
+      }
+    });
+  });
+});
+
+function getScrollDirection(
   from: number,
   to: number
 ): { steps: number; direction: 'up' | 'down' } {
-  const directDiff = to - from
-  const clockwiseSteps = ((directDiff % 10) + 10) % 10
-  const counterClockwiseSteps = 10 - clockwiseSteps
+  const diff = to - from;
+  const isIncreasing = diff > 0;
 
-  if (clockwiseSteps <= counterClockwiseSteps) {
-    return { steps: clockwiseSteps, direction: 'up' }
+  let direction: 'up' | 'down';
+  let steps: number;
+
+  if (isIncreasing) {
+    direction = props.increasingDirection;
+    steps = direction === 'up' ? diff : 10 - diff;
   } else {
-    return { steps: counterClockwiseSteps, direction: 'down' }
+    direction = props.increasingDirection === 'up' ? 'down' : 'up';
+    steps = direction === 'up' ? Math.abs(diff) : 10 - Math.abs(diff);
   }
+
+  return { steps, direction };
 }
 
-function getNextDigit(current: number, direction: 'up' | 'down'): number {
-  if (direction === 'up') {
-    return (current + 1) % 10
-  } else {
-    return (current - 1 + 10) % 10
-  }
-}
-
-function createStepAnimation(
+function animateToDigit(
   index: number,
-  fromDigit: string,
-  toDigit: string,
-  direction: 'up' | 'down'
+  from: number,
+  to: number
 ): Promise<void> {
   return new Promise(resolve => {
-    const isFromBottom =
-      props.increasingDirection === 'up'
-        ? direction === 'up'
-        : direction === 'down'
-
-    displayDigits.value[index] = {
-      current: toDigit,
-      old: fromDigit,
-      direction: isFromBottom ? 'from-bottom' : 'from-top'
+    const strip = stripRefs.value.get(index);
+    if (!strip) {
+      resolve();
+      return;
     }
 
-    nextTick(() => {
-      if (!counterRef.value) {
-        resolve()
-        return
+    if (from === to) {
+      resolve();
+      return;
+    }
+
+    const { steps, direction } = getScrollDirection(from, to);
+
+    if (digitColumns.value[index].animation) {
+      digitColumns.value[index].animation!.kill();
+    }
+
+    const duration = (steps * props.stepDuration) / 1000;
+
+    const currentY = -from;
+    const distance = direction === 'up' ? -steps : steps;
+    const targetY = currentY + distance;
+
+    const anim = gsap.to(strip, {
+      y: `${targetY}em`,
+      duration,
+      ease: 'power2.inOut',
+      onUpdate: function () {
+        const progress = this.progress();
+        const velocity = Math.abs(this.getVelocity ? this.getVelocity() : 0);
+        const blurAmount = Math.min(velocity * 0.01, 4);
+
+        if (progress > 0.1 && progress < 0.9) {
+          gsap.set(strip, { filter: `blur(${blurAmount}px)` });
+        }
+      },
+      onComplete: () => {
+        gsap.set(strip, { y: `${-to}em`, filter: 'blur(0px)' });
+        digitColumns.value[index].currentValue = to;
+        digitColumns.value[index].animation = null;
+        resolve();
       }
+    });
 
-      const slots = counterRef.value.querySelectorAll('.digit-slot')
-      const slot = slots[index]
-      if (!slot) {
-        resolve()
-        return
-      }
-
-      const oldEl = slot.querySelector('.old')
-      const newEl = slot.querySelector('.new')
-
-      if (oldEl && newEl) {
-        const yOffset = 100
-        const duration = props.stepDuration / 1000
-
-        gsap.killTweensOf([oldEl, newEl])
-
-        gsap.fromTo(
-          oldEl,
-          { yPercent: 0, opacity: 1, filter: 'blur(0px)' },
-          {
-            yPercent: isFromBottom ? -yOffset : yOffset,
-            opacity: 0,
-            filter: 'blur(10px)',
-            duration,
-            ease: 'power2.out'
-          }
-        )
-
-        gsap.fromTo(
-          newEl,
-          {
-            yPercent: isFromBottom ? yOffset : -yOffset,
-            opacity: 0,
-            filter: 'blur(10px)'
-          },
-          {
-            yPercent: 0,
-            opacity: 1,
-            filter: 'blur(0px)',
-            duration,
-            ease: 'power2.out',
-            onComplete: resolve
-          }
-        )
-      } else {
-        resolve()
-      }
-    })
-  })
-}
-
-async function animateDigit(
-  index: number,
-  fromChar: string,
-  toChar: string
-): Promise<void> {
-  const from = parseInt(fromChar)
-  const to = parseInt(toChar)
-
-  if (from === to) return
-
-  const { steps, direction } = getShortestPath(from, to)
-  let current = from
-
-  const stepDuration = props.stepDuration
-  const overlap = stepDuration * 0.4
-
-  const promises: Promise<void>[] = []
-
-  for (let i = 0; i < steps; i++) {
-    const next = getNextDigit(current, direction)
-    const delay = i * (stepDuration - overlap)
-
-    const promise = new Promise<void>(resolve => {
-      setTimeout(async () => {
-        await createStepAnimation(
-          index,
-          current.toString(),
-          next.toString(),
-          direction
-        )
-        resolve()
-      }, delay)
-    })
-
-    promises.push(promise)
-    current = next
-  }
-
-  await Promise.all(promises)
+    digitColumns.value[index].animation = anim;
+  });
 }
 
 const updateCounter = async (newValue: number) => {
-  const oldValue = lastStableValue
+  const oldValue = lastStableValue;
 
-  const newStrRaw = newValue.toString()
-  const oldStrRaw = oldValue.toString()
-  const maxLength = Math.max(newStrRaw.length, oldStrRaw.length)
+  const newStrRaw = newValue.toString();
+  const oldStrRaw = oldValue.toString();
+  const maxLength = Math.max(newStrRaw.length, oldStrRaw.length);
 
-  const newStr = newStrRaw.padStart(maxLength, '0')
-  const oldStr = oldStrRaw.padStart(maxLength, '0')
+  const newStr = newStrRaw.padStart(maxLength, '0');
+  const oldStr = oldStrRaw.padStart(maxLength, '0');
 
-  const newArr = newStr.split('')
-  const oldArr = oldStr.split('')
+  const newArr = newStr.split('').map(d => parseInt(d));
+  const oldArr = oldStr.split('').map(d => parseInt(d));
 
-  displayDigits.value = newArr.map(digit => ({
-    current: digit,
-    old: null,
-    direction: null
-  }))
+  while (digitColumns.value.length < maxLength) {
+    digitColumns.value.push({
+      currentValue: 0,
+      animation: null
+    });
+  }
 
-  lastStableValue = newValue
+  while (digitColumns.value.length > maxLength) {
+    const removed = digitColumns.value.pop();
+    if (removed?.animation) {
+      removed.animation.kill();
+    }
+    const lastIndex = digitColumns.value.length;
+    stripRefs.value.delete(lastIndex);
+  }
 
-  await nextTick()
+  await nextTick();
 
-  const animations: Promise<void>[] = []
+  const animations: Promise<void>[] = [];
 
   for (let i = 0; i < maxLength; i++) {
-    const oldDigit = oldArr[i]
-    const newDigit = newArr[i]
+    const oldDigit = oldArr[i];
+    const newDigit = newArr[i];
 
     if (oldDigit !== newDigit) {
-      const animPromise = animateDigit(i, oldDigit, newDigit)
-      animationPromises.set(i, animPromise)
-      animations.push(animPromise)
+      animations.push(animateToDigit(i, oldDigit, newDigit));
     }
   }
 
-  await Promise.all(animations)
+  await Promise.all(animations);
 
-  displayDigits.value = newStrRaw.split('').map(digit => ({
-    current: digit,
-    old: null,
-    direction: null
-  }))
-}
+  lastStableValue = newValue;
+
+  digitColumns.value = newStrRaw.split('').map(d => ({
+    currentValue: parseInt(d),
+    animation: null
+  }));
+
+  await nextTick();
+
+  newStrRaw.split('').forEach((digit, index) => {
+    const strip = stripRefs.value.get(index);
+    if (strip) {
+      gsap.set(strip, { y: `-${digit}em`, filter: 'blur(0px)' });
+    }
+  });
+};
 
 watch(
   () => props.modelValue,
   newVal => {
-    if (timeoutId) clearTimeout(timeoutId)
+    if (timeoutId) clearTimeout(timeoutId);
 
     if (!props.debounce) {
-      updateCounter(newVal)
-      return
+      updateCounter(newVal);
+      return;
     }
 
     timeoutId = setTimeout(() => {
-      updateCounter(newVal)
-    }, props.debounce)
+      updateCounter(newVal);
+    }, props.debounce);
   }
-)
+);
 </script>
 
 <style scoped>
 .motion-counter {
   display: inline-flex;
-  font-feature-settings: 'tnum'; /* 等宽数字，防止抖动 */
+  font-feature-settings: 'tnum';
   font-variant-numeric: tabular-nums;
   overflow: hidden;
   line-height: 1;
@@ -287,27 +256,23 @@ watch(
 .digit-slot {
   position: relative;
   display: inline-block;
-  width: 0.6em; /* 根据字体调整宽度 */
+  width: 0.6em;
   height: 1em;
-  text-align: center;
+  overflow: hidden;
+}
+
+.digit-strip {
+  display: flex;
+  flex-direction: column;
+  will-change: transform;
 }
 
 .digit {
-  display: inline-block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
-  height: 100%;
-  /* 确保新旧数字重叠 */
-}
-
-.digit.new {
-  position: relative; /* 默认流 */
-  z-index: 2;
-}
-
-.digit.old {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 1;
+  height: 1em;
+  line-height: 1;
 }
 </style>

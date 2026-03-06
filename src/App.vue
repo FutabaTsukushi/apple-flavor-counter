@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import MotionCounter from './MotionCounter.vue'
+import { ref } from 'vue';
+import MotionCounter from './MotionCounter.vue';
 
-const count = ref(2023)
-const debounceVal = ref(300)
-const stepDurationVal = ref(80)
-const sizeVal = ref(60)
-const increasingDirectionVal = ref<'up' | 'down'>('up')
+const count = ref(2023);
+const debounceVal = ref(300);
+const stepDurationVal = ref(80);
+const sizeVal = ref(60);
+const increasingDirectionVal = ref<'up' | 'down'>('up');
 
-const add = () => (count.value += 10)
-const sub = () => (count.value -= 10)
+const add = () => (count.value += 10);
+const sub = () => (count.value -= 10);
 </script>
 
 <template>
