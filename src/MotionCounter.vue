@@ -84,7 +84,7 @@ onMounted(() => {
   }));
 
   nextTick(() => {
-    digitColumns.value.forEach((col, index) => {
+    digitColumns.value.forEach((_, index) => {
       const strip = stripRefs.value.get(index);
       if (strip) {
         gsap.set(strip, { y: 0 });
@@ -93,37 +93,43 @@ onMounted(() => {
   });
 });
 
+interface ScrollSequence {
+  sequence: number[];
+  moveUp: boolean;
+}
+
 function getScrollSequence(
   from: number,
   to: number,
   increasingDirection: 'up' | 'down'
-): number[] {
-  if (from === to) return [from];
+): ScrollSequence {
+  if (from === to) return { sequence: [from], moveUp: true };
 
   // 1. Determine logical direction (increment or decrement)
   // We assume the shortest path on the circular dial (0-9)
   // But we also respect the "increasingDirection" prop for visual flow.
-  
+
   // Logic:
   // If we are logically increasing (e.g. 2->8, 8->2 wrap), we want the strip to move in the "increasing" visual direction.
   // If we are logically decreasing (e.g. 8->2 direct, 2->8 wrap), we want the strip to move in the "decreasing" visual direction.
 
   const diff = (to - from + 10) % 10;
   const isIncrementing = diff <= 5; // Shortest path is forward?
-  
+
   // Visual direction mapping:
   // increasingDirection='up':
   //   Incrementing -> Strip moves UP (y decreases), show sequences like [from, from+1, ..., to]
   //   Decrementing -> Strip moves DOWN (y increases), show sequences like [to, ..., from-1, from] (reversed view)
   //                  Wait, if strip moves down, we see numbers ABOVE current.
   //                  So the DOM sequence should be [to, ..., from]. Initial y at bottom (from).
-  
+
   // increasingDirection='down':
   //   Incrementing -> Strip moves DOWN (y increases), show [to, ..., from].
   //   Decrementing -> Strip moves UP (y decreases), show [from, ..., to].
 
-  const moveUp = (increasingDirection === 'up' && isIncrementing) || 
-                 (increasingDirection === 'down' && !isIncrementing);
+  const moveUp =
+    (increasingDirection === 'up' && isIncrementing) ||
+    (increasingDirection === 'down' && !isIncrementing);
 
   const sequence: number[] = [];
 
@@ -152,7 +158,7 @@ function getScrollSequence(
     // If we have [to, ..., from], and we are at "from" (bottom), y should be -(length-1) em.
     // Target is "to" (top), y should be 0.
   }
-  
+
   return { sequence, moveUp };
 }
 
@@ -179,16 +185,19 @@ function animateToDigit(
     }
 
     // Determine sequence and direction
-    const { sequence, moveUp } = getScrollSequence(from, to, props.increasingDirection);
-    
+    const { sequence, moveUp } = getScrollSequence(
+      from,
+      to,
+      props.increasingDirection
+    );
+
     // Update DOM
     col.digits = sequence;
 
     nextTick(() => {
       // Setup initial position
-      const stepHeight = 1; // 1em
       const totalSteps = sequence.length - 1;
-      
+
       let startY = 0;
       let targetY = 0;
 
@@ -205,7 +214,7 @@ function animateToDigit(
         startY = -totalSteps;
         targetY = 0;
       }
-      
+
       gsap.set(strip, { y: `${startY}em` });
 
       const duration = (totalSteps * props.stepDuration) / 1000;
@@ -216,7 +225,7 @@ function animateToDigit(
         ease: 'power2.inOut',
         onUpdate: function () {
           // Add blur effect based on velocity
-          // We can approximate velocity or use GSAP's tracker if available, 
+          // We can approximate velocity or use GSAP's tracker if available,
           // but here we just check progress speed? No, let's use a simple heuristic.
           // Or just leave it for now since we don't have the inertia plugin.
           // The previous code used this.getVelocity(), but that requires InertiaPlugin or Draggable.
@@ -224,9 +233,9 @@ function animateToDigit(
           // We can skip blur for now to ensure stability, or use a fixed blur during animation.
           const progress = this.progress();
           if (progress > 0.1 && progress < 0.9) {
-             gsap.set(strip, { filter: 'blur(2px)' });
+            gsap.set(strip, { filter: 'blur(2px)' });
           } else {
-             gsap.set(strip, { filter: 'blur(0px)' });
+            gsap.set(strip, { filter: 'blur(0px)' });
           }
         },
         onComplete: () => {
@@ -234,13 +243,13 @@ function animateToDigit(
           col.currentValue = to;
           col.digits = [to];
           col.animation = null;
-          
+
           // Reset position synchronously with DOM update
           // We need to wait for Vue to render the single digit [to]
           // Then reset y to 0 (since it's the only digit)
           nextTick(() => {
-             gsap.set(strip, { y: 0, filter: 'blur(0px)' });
-             resolve();
+            gsap.set(strip, { y: 0, filter: 'blur(0px)' });
+            resolve();
           });
         }
       });
@@ -251,7 +260,7 @@ function animateToDigit(
 }
 
 // Need to update the getScrollSequence return type locally or use `any` if lazy
-// But let's fix the logic above first. 
+// But let's fix the logic above first.
 // Redefining getScrollSequence inside or outside.
 
 const updateCounter = async (newValue: number) => {
@@ -275,14 +284,15 @@ const updateCounter = async (newValue: number) => {
       animation: null
     });
   }
-  
+
   // Initialize new columns position
   await nextTick();
-  digitColumns.value.forEach((col, idx) => {
-     if (idx >= oldArr.length) { // New columns
-        const strip = stripRefs.value.get(idx);
-        if (strip) gsap.set(strip, { y: 0 });
-     }
+  digitColumns.value.forEach((_, idx) => {
+    if (idx >= oldArr.length) {
+      // New columns
+      const strip = stripRefs.value.get(idx);
+      if (strip) gsap.set(strip, { y: 0 });
+    }
   });
 
   while (digitColumns.value.length > maxLength) {
@@ -307,17 +317,17 @@ const updateCounter = async (newValue: number) => {
   await Promise.all(animations);
 
   lastStableValue = newValue;
-  
+
   // Final cleanup for consistency
   digitColumns.value = newStrRaw.split('').map(d => ({
     currentValue: parseInt(d),
     digits: [parseInt(d)],
     animation: null
   }));
-  
+
   await nextTick();
   stripRefs.value.forEach(strip => {
-     gsap.set(strip, { y: 0, filter: 'blur(0px)' });
+    gsap.set(strip, { y: 0, filter: 'blur(0px)' });
   });
 };
 
