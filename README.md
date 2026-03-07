@@ -14,11 +14,11 @@ A Vue 3 counter component with smooth animations, inspired by motion design aest
 ## Installation
 
 ```bash
-npm install motion-counter
+npm install vue-motion-counter
 # or
-pnpm add motion-counter
+pnpm add vue-motion-counter
 # or
-yarn add motion-counter
+yarn add vue-motion-counter
 ```
 
 ## Usage
@@ -27,7 +27,7 @@ yarn add motion-counter
 
 ```ts
 import { createApp } from 'vue';
-import { MotionCounter } from 'motion-counter';
+import { MotionCounter } from 'vue-motion-counter';
 import 'motion-counter/style.css';
 
 const app = createApp(App);
@@ -39,7 +39,7 @@ app.component('MotionCounter', MotionCounter);
 ```vue
 <script setup>
 import { ref } from 'vue';
-import { MotionCounter } from 'motion-counter';
+import { MotionCounter } from 'vue-motion-counter';
 import 'motion-counter/style.css';
 
 const count = ref(0);
