@@ -1,0 +1,39 @@
+# Source code
+src/
+*.ts
+!*.d.ts
+
+# Tests
+test/
+tests/
+*.test.ts
+*.spec.ts
+__tests__/
+
+# Development files
+*.config.js
+*.config.ts
+.eslintrc*
+.prettierrc
+.editorconfig
+
+# Examples and demos
+index.html
+examples/
+demo/
+
+# Development dependencies and configs
+node_modules/
+.git/
+.gitignore
+.DS_Store
+*.log
+
+# Documentation
+CHANGELOG.md
+CONTRIBUTING.md
+SECURITY.md
+
+# Test coverage
+coverage/
+.nyc_output/
