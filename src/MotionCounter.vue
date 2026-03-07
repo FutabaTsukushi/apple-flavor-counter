@@ -1,26 +1,9 @@
-<template>
-  <div
-    ref="counterRef"
-    class="motion-counter"
-    :style="{ fontSize: size + 'px', color: color }"
-  >
-    <div v-for="(col, index) in digitColumns" :key="index" class="digit-slot">
-      <div :ref="el => setStripRef(el, index)" class="digit-strip">
-        <span v-for="(digit, dIndex) in col.digits" :key="dIndex" class="digit">
-          {{ digit }}
-        </span>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
 import {
   ref,
   watch,
   nextTick,
   onMounted,
-  useTemplateRef,
   type ComponentPublicInstance
 } from 'vue';
 import gsap from 'gsap';
@@ -59,7 +42,6 @@ interface DigitColumn {
   animation: gsap.core.Tween | null;
 }
 
-const counterRef = useTemplateRef<HTMLDivElement>('counterRef');
 const digitColumns = ref<DigitColumn[]>([]);
 const stripRefs = ref<Map<number, HTMLDivElement>>(new Map());
 
@@ -345,6 +327,18 @@ watch(
   }
 );
 </script>
+
+<template>
+  <div class="motion-counter" :style="{ fontSize: size + 'px', color: color }">
+    <div v-for="(col, index) in digitColumns" :key="index" class="digit-slot">
+      <div :ref="el => setStripRef(el, index)" class="digit-strip">
+        <span v-for="(digit, dIndex) in col.digits" :key="dIndex" class="digit">
+          {{ digit }}
+        </span>
+      </div>
+    </div>
+  </div>
+</template>
 
 <style scoped>
 .motion-counter {
