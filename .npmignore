@@ -9,6 +9,7 @@ tests/
 *.test.ts
 *.spec.ts
 __tests__/
+dist/test/
 
 # Development files
 *.config.js
