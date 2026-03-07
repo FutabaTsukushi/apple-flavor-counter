@@ -232,11 +232,9 @@ function animateToDigit(
           // Assuming standard GSAP, we can't get velocity easily without plugins.
           // We can skip blur for now to ensure stability, or use a fixed blur during animation.
           const progress = this.progress();
-          if (progress > 0.1 && progress < 0.9) {
-            gsap.set(strip, { filter: 'blur(2px)' });
-          } else {
-            gsap.set(strip, { filter: 'blur(0px)' });
-          }
+          // Calculate blur based on a sine curve for a smooth transition from 0 to 2px back to 0
+          const blurValue = Math.sin(progress * Math.PI) * 2;
+          gsap.set(strip, { filter: `blur(${blurValue}px)` });
         },
         onComplete: () => {
           // Cleanup
