@@ -285,6 +285,24 @@ describe('MotionCounter', () => {
     expect(wrapper.props('increasingDirection')).toBe('down');
   });
 
+  it('uses shortest path when scrolling down', async () => {
+    vi.useFakeTimers();
+    const wrapper = mount(MotionCounter, {
+      props: { modelValue: 1, debounce: 0, increasingDirection: 'down' }
+    });
+    await nextTick();
+    await nextTick();
+
+    await wrapper.setProps({ modelValue: 2 });
+    await nextTick();
+
+    const digits = (wrapper.vm as any).digitColumns[0].digits;
+    expect(digits).toEqual([2, 1]);
+
+    vi.runAllTimers();
+    wrapper.unmount();
+  });
+
   it('accepts custom stepDuration', async () => {
     const wrapper = mount(MotionCounter, {
       props: { modelValue: 5, stepDuration: 100 }

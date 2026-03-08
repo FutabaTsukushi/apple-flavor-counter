@@ -87,59 +87,26 @@ function getScrollSequence(
 ): ScrollSequence {
   if (from === to) return { sequence: [from], moveUp: true };
 
-  // 1. Determine logical direction (increment or decrement)
-  // We assume the shortest path on the circular dial (0-9)
-  // But we also respect the "increasingDirection" prop for visual flow.
+  const forwardSteps = (to - from + 10) % 10;
+  const backwardSteps = (from - to + 10) % 10;
+  const isIncrementing = forwardSteps <= backwardSteps;
 
-  // Logic:
-  // If we are logically increasing (e.g. 2->8, 8->2 wrap), we want the strip to move in the "increasing" visual direction.
-  // If we are logically decreasing (e.g. 8->2 direct, 2->8 wrap), we want the strip to move in the "decreasing" visual direction.
-
-  const diff = (to - from + 10) % 10;
-  const isIncrementing = diff <= 5; // Shortest path is forward?
-
-  // Visual direction mapping:
-  // increasingDirection='up':
-  //   Incrementing -> Strip moves UP (y decreases), show sequences like [from, from+1, ..., to]
-  //   Decrementing -> Strip moves DOWN (y increases), show sequences like [to, ..., from-1, from] (reversed view)
-  //                  Wait, if strip moves down, we see numbers ABOVE current.
-  //                  So the DOM sequence should be [to, ..., from]. Initial y at bottom (from).
-
-  // increasingDirection='down':
-  //   Incrementing -> Strip moves DOWN (y increases), show [to, ..., from].
-  //   Decrementing -> Strip moves UP (y decreases), show [from, ..., to].
+  // Build the shortest path in logical order (from -> ... -> to)
+  const step = isIncrementing ? 1 : -1;
+  const path: number[] = [from];
+  let curr = from;
+  while (curr !== to) {
+    curr = (curr + step + 10) % 10;
+    path.push(curr);
+  }
 
   const moveUp =
     (increasingDirection === 'up' && isIncrementing) ||
     (increasingDirection === 'down' && !isIncrementing);
 
-  const sequence: number[] = [];
-
-  if (moveUp) {
-    // Sequence: [from, from+1, ..., to]
-    // Strip starts at index 0 (from), moves to index N (to). y: 0 -> -N em
-    let curr = from;
-    sequence.push(curr);
-    while (curr !== to) {
-      curr = (curr + 1) % 10;
-      sequence.push(curr);
-    }
-  } else {
-    // Sequence: [to, to+1, ..., from] (reversed for visual logic)
-    // Actually, if we want to move DOWN (y increases), we need numbers ABOVE the current one.
-    // So the sequence in DOM should be: [to, (to-1), ..., from].
-    // Strip starts at index N (from), moves to index 0 (to). y: -N em -> 0
-    let curr = to;
-    sequence.push(curr);
-    while (curr !== from) {
-      curr = (curr + 1) % 10;
-      sequence.push(curr);
-    }
-    // Now sequence is [to, ..., from]
-    // But wait, "to" is the target. "from" is current.
-    // If we have [to, ..., from], and we are at "from" (bottom), y should be -(length-1) em.
-    // Target is "to" (top), y should be 0.
-  }
+  // For downward motion we need the current digit at the bottom of the strip,
+  // so use the reversed sequence to align start/end positions.
+  const sequence = moveUp ? path : [...path].reverse();
 
   return { sequence, moveUp };
 }
